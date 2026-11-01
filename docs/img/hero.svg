@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 310" width="1000" height="310" role="img" aria-labelledby="t d">
+  <title id="t">Lodestar</title>
+  <desc id="d">An agent asks Lodestar where something is, gets three short lines, and opens only that file.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8aa0c4"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="310" rx="18" fill="#0b1220"/>
+  <g transform="translate(48 58)">
+    <path d="M18 0 L23 13 L36 18 L23 23 L18 36 L13 23 L0 18 L13 13 Z" fill="#f5b942"/>
+  </g>
+  <text x="102" y="86" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="46" font-weight="700" fill="#f4f7fb">Lodestar</text>
+  <text x="48" y="128" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="19" fill="#9fb0cc">A cheap map of huge file trees for coding agents. Ask it first, open only what it names.</text>
+
+  <g font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="15">
+    <rect x="48" y="170" width="198" height="84" rx="12" fill="#16203a" stroke="#2a3a5f"/>
+    <text x="64" y="198" fill="#9fb0cc" font-size="12">AGENT</text>
+    <text x="64" y="222" fill="#f4f7fb">Where is the</text>
+    <text x="64" y="242" fill="#f4f7fb">train loader?</text>
+
+    <rect x="292" y="170" width="198" height="84" rx="12" fill="#2b2410" stroke="#f5b942"/>
+    <text x="308" y="198" fill="#f5b942" font-size="12">LODESTAR</text>
+    <text x="308" y="226" fill="#f4f7fb" font-family="Consolas, ui-monospace, monospace" font-size="14">find train loader</text>
+
+    <rect x="536" y="170" width="198" height="84" rx="12" fill="#16203a" stroke="#2a3a5f"/>
+    <text x="552" y="198" fill="#9fb0cc" font-size="12">ANSWER</text>
+    <text x="552" y="222" fill="#f4f7fb">1 line, not 1,000</text>
+    <text x="552" y="242" fill="#9fb0cc" font-size="13">capped, no contents</text>
+
+    <rect x="780" y="170" width="172" height="84" rx="12" fill="#10281f" stroke="#2dd4bf"/>
+    <text x="796" y="198" fill="#2dd4bf" font-size="12">AGENT</text>
+    <text x="796" y="222" fill="#f4f7fb">Opens only</text>
+    <text x="796" y="242" fill="#f4f7fb">that file</text>
+  </g>
+  <g stroke="#8aa0c4" stroke-width="2" marker-end="url(#a)">
+    <line x1="250" y1="212" x2="286" y2="212"/>
+    <line x1="494" y1="212" x2="530" y2="212"/>
+    <line x1="738" y1="212" x2="774" y2="212"/>
+  </g>
+  <text x="48" y="288" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="13" fill="#6f84a8">No file contents read. No model calls. One SQLite file. MCP server, CLI and Claude Code plugin.</text>
+</svg>

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-labelledby="t d">
+  <title id="t">How big folders collapse</title>
+  <desc id="d">A folder with two million images becomes a single index line with counts and sample names.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f5b942"/>
+    </marker>
+  </defs>
+  <rect width="960" height="400" rx="18" fill="#0b1220"/>
+  <text x="32" y="44" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="22" font-weight="700" fill="#f4f7fb">Big folders become one line</text>
+  <text x="32" y="68" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="14" fill="#9fb0cc">Example numbers. A folder with 200+ files or 100+ subfolders collapses.</text>
+
+  <rect x="32" y="92" width="400" height="276" rx="12" fill="#121a2b" stroke="#2a3a5f"/>
+  <text x="52" y="120" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="12" fill="#6f84a8">ON DISK</text>
+  <g font-family="Consolas, ui-monospace, monospace" font-size="14" fill="#c9d6ee">
+    <text x="52" y="150">datasets/</text>
+    <text x="72" y="174" fill="#f5b942">imagenet-val/</text>
+    <text x="260" y="174" fill="#9fb0cc">2,000,000 files</text>
+    <text x="72" y="198">celeba/</text>
+    <text x="260" y="198" fill="#9fb0cc">200,000 files</text>
+    <text x="52" y="226">runs/</text>
+    <text x="72" y="250">ablation_00/ … ablation_29/</text>
+    <text x="52" y="278">diffusion-lab/</text>
+    <text x="72" y="302">train.py  models/  data/  eval/ …</text>
+  </g>
+  <g fill="#f5b942" opacity="0.55">
+    <circle cx="368" cy="326" r="2"/><circle cx="378" cy="326" r="2"/><circle cx="388" cy="326" r="2"/><circle cx="398" cy="326" r="2"/><circle cx="408" cy="326" r="2"/>
+    <circle cx="368" cy="336" r="2"/><circle cx="378" cy="336" r="2"/><circle cx="388" cy="336" r="2"/><circle cx="398" cy="336" r="2"/><circle cx="408" cy="336" r="2"/>
+    <circle cx="368" cy="346" r="2"/><circle cx="378" cy="346" r="2"/><circle cx="388" cy="346" r="2"/><circle cx="398" cy="346" r="2"/><circle cx="408" cy="346" r="2"/>
+  </g>
+  <text x="52" y="346" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="13" fill="#9fb0cc">…millions more files</text>
+
+  <line x1="448" y1="230" x2="512" y2="230" stroke="#f5b942" stroke-width="3" marker-end="url(#a)"/>
+  <text x="446" y="214" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="13" fill="#f5b942">collapse</text>
+
+  <rect x="528" y="92" width="400" height="276" rx="12" fill="#121a2b" stroke="#f5b942"/>
+  <text x="548" y="120" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="12" fill="#f5b942">WHAT THE AGENT SEES</text>
+  <g font-family="Consolas, ui-monospace, monospace" font-size="13" fill="#c9d6ee">
+    <text x="548" y="152"><tspan fill="#2dd4bf">media</tspan>  datasets/imagenet-val</text>
+    <text x="548" y="174" fill="#9fb0cc">  [collapsed] 2,000,000 files</text>
+    <text x="548" y="196" fill="#9fb0cc">  .jpeg 2,000,000</text>
+    <text x="548" y="218" fill="#9fb0cc">  samples: n00000000, n00000001, …</text>
+    <text x="548" y="256"><tspan fill="#2dd4bf">media</tspan>  datasets/celeba  [collapsed]</text>
+    <text x="548" y="290"><tspan fill="#60a5fa">experiment</tspan>  runs/ablation_00</text>
+    <text x="548" y="312"><tspan fill="#f5b942">repo</tspan>  diffusion-lab</text>
+  </g>
+  <text x="548" y="350" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="13" fill="#9fb0cc">Counts, extensions and samples. Never file contents.</text>
+</svg>

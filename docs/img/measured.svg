@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 350" width="960" height="350" role="img" aria-labelledby="t d">
+  <title id="t">Files on disk versus rows in the index</title>
+  <desc id="d">A real research folder went from 544,192 files to 171,342 index rows, 3.2 times fewer. The demo lab went from 2,046 files to 138 rows, 14.8 times fewer.</desc>
+  <rect width="960" height="350" rx="18" fill="#0b1220"/>
+  <text x="32" y="44" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="22" font-weight="700" fill="#f4f7fb">Files on disk vs rows in the index</text>
+  <text x="32" y="68" font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="14" fill="#9fb0cc">Measured, not projected. Bar lengths are relative within each pair.</text>
+
+  <g font-family="Segoe UI, Inter, system-ui, sans-serif" fill="#c9d6ee">
+    <text x="32" y="112" font-size="15" font-weight="600" fill="#f4f7fb">A real research folder</text>
+    <text x="32" y="132" font-size="13" fill="#9fb0cc">mid-sized folders, so most rows are single files</text>
+    <text x="32" y="168" font-size="13" fill="#9fb0cc">files</text>
+    <rect x="104" y="154" width="560" height="20" rx="4" fill="#3b4c72"/>
+    <text x="676" y="169" font-size="14">544,192</text>
+    <text x="32" y="198" font-size="13" fill="#9fb0cc">rows</text>
+    <rect x="104" y="184" width="176" height="20" rx="4" fill="#f5b942"/>
+    <text x="292" y="199" font-size="14" fill="#f5b942">171,342  ·  3.2× fewer  ·  27 s</text>
+  </g>
+
+  <g font-family="Segoe UI, Inter, system-ui, sans-serif" fill="#c9d6ee">
+    <text x="32" y="242" font-size="15" font-weight="600" fill="#f4f7fb">The demo lab</text>
+    <text x="32" y="262" font-size="13" fill="#9fb0cc"><tspan font-family="Consolas, ui-monospace, monospace">scripts/make_demo_lab.py</tspan> reproduces it</text>
+    <text x="32" y="298" font-size="13" fill="#9fb0cc">files</text>
+    <rect x="104" y="284" width="560" height="20" rx="4" fill="#3b4c72"/>
+    <text x="676" y="299" font-size="14">2,046</text>
+    <text x="32" y="324" font-size="13" fill="#9fb0cc">rows</text>
+    <rect x="104" y="310" width="38" height="14" rx="3" fill="#f5b942"/>
+    <text x="156" y="322" font-size="14" fill="#f5b942">138  ·  14.8× fewer</text>
+  </g>
+</svg>

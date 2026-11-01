@@ -10,6 +10,7 @@
   "homepage": "https://github.com/alimohammadiamirhossein/lodestar",
   "repository": "https://github.com/alimohammadiamirhossein/lodestar",
   "license": "MIT",
+  "icon": "./.claude-plugin/icon.png",
   "keywords": ["mcp", "file-index", "token-savings", "context-engineering", "coding-agent"],
   "mcpServers": {
     "lodestar": {

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" role="img" aria-labelledby="t d">
+  <title id="t">Where Lodestar fits</title>
+  <desc id="d">A Sonnet main agent consults an Opus advisor, hands cheap work to DeepSeek, and asks the Lodestar map first. The structure index is built; the code graph, experiment table, summary pages and nightly dream are planned.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8aa0c4"/>
+    </marker>
+  </defs>
+  <rect width="960" height="560" rx="18" fill="#0b1220"/>
+  <g font-family="Segoe UI, Inter, system-ui, sans-serif">
+    <text x="32" y="44" font-size="22" font-weight="700" fill="#f4f7fb">Where Lodestar fits</text>
+    <text x="32" y="68" font-size="14" fill="#9fb0cc">Most of the saving should come from agents not reading files.</text>
+
+    <rect x="32" y="96" width="220" height="56" rx="12" fill="#16203a" stroke="#2a3a5f"/>
+    <text x="52" y="130" font-size="16" fill="#f4f7fb">You</text>
+
+    <rect x="32" y="196" width="300" height="92" rx="12" fill="#16203a" stroke="#60a5fa"/>
+    <text x="52" y="226" font-size="17" font-weight="600" fill="#f4f7fb">Sonnet 5.5</text>
+    <text x="52" y="248" font-size="13" fill="#9fb0cc">main agent: plans, routes, checks</text>
+    <rect x="52" y="260" width="82" height="18" rx="9" fill="#60a5fa"/>
+    <text x="64" y="273" font-size="11" font-weight="600" fill="#0b1220">CONFIGURED</text>
+
+    <rect x="640" y="96" width="288" height="92" rx="12" fill="#16203a" stroke="#60a5fa"/>
+    <text x="660" y="126" font-size="17" font-weight="600" fill="#f4f7fb">Opus advisor</text>
+    <text x="660" y="148" font-size="13" fill="#9fb0cc">plan check, unstick, sign-off</text>
+    <rect x="660" y="160" width="82" height="18" rx="9" fill="#60a5fa"/>
+    <text x="672" y="173" font-size="11" font-weight="600" fill="#0b1220">CONFIGURED</text>
+
+    <rect x="640" y="212" width="288" height="92" rx="12" fill="#16203a" stroke="#60a5fa"/>
+    <text x="660" y="242" font-size="17" font-weight="600" fill="#f4f7fb">DeepSeek via Deputy</text>
+    <text x="660" y="264" font-size="13" fill="#9fb0cc">reading, checked coding, grading</text>
+    <rect x="660" y="276" width="96" height="18" rx="9" fill="#60a5fa"/>
+    <text x="672" y="289" font-size="11" font-weight="600" fill="#0b1220">WORKS TODAY</text>
+    <text x="766" y="289" font-size="11" fill="#9fb0cc">upgrades planned</text>
+
+    <rect x="32" y="336" width="896" height="132" rx="14" fill="#2b2410" stroke="#f5b942"/>
+    <text x="52" y="366" font-size="17" font-weight="600" fill="#f5b942">Lodestar map</text>
+    <text x="170" y="366" font-size="13" fill="#9fb0cc">agents ask it before searching</text>
+
+    <rect x="52" y="384" width="200" height="66" rx="10" fill="#10281f" stroke="#2dd4bf"/>
+    <text x="68" y="410" font-size="14" font-weight="600" fill="#f4f7fb">Structure index</text>
+    <rect x="68" y="420" width="52" height="18" rx="9" fill="#2dd4bf"/>
+    <text x="78" y="433" font-size="11" font-weight="600" fill="#0b1220">BUILT</text>
+
+    <rect x="266" y="384" width="200" height="66" rx="10" fill="none" stroke="#6f84a8" stroke-dasharray="5 4"/>
+    <text x="282" y="410" font-size="14" font-weight="600" fill="#c9d6ee">Code graph</text>
+    <text x="282" y="434" font-size="12" fill="#9fb0cc">planned: wrap an existing one</text>
+
+    <rect x="480" y="384" width="200" height="66" rx="10" fill="none" stroke="#6f84a8" stroke-dasharray="5 4"/>
+    <text x="496" y="410" font-size="14" font-weight="600" fill="#c9d6ee">Experiment table</text>
+    <text x="496" y="434" font-size="12" fill="#9fb0cc">planned: runs, configs, metrics</text>
+
+    <rect x="694" y="384" width="214" height="66" rx="10" fill="none" stroke="#6f84a8" stroke-dasharray="5 4"/>
+    <text x="710" y="410" font-size="14" font-weight="600" fill="#c9d6ee">Summary pages</text>
+    <text x="710" y="434" font-size="12" fill="#9fb0cc">planned: repos, papers, runs</text>
+
+    <rect x="32" y="486" width="896" height="52" rx="12" fill="none" stroke="#6f84a8" stroke-dasharray="5 4"/>
+    <text x="52" y="518" font-size="15" font-weight="600" fill="#c9d6ee">Nightly dream</text>
+    <text x="170" y="518" font-size="13" fill="#9fb0cc">planned: refresh the map, mine lessons, tidy and refine your .md files with undo</text>
+  </g>
+  <g stroke="#8aa0c4" stroke-width="2" fill="none" marker-end="url(#a)">
+    <line x1="142" y1="154" x2="142" y2="190"/>
+    <path d="M336 232 L388 232 L388 142 L634 142" stroke-dasharray="6 4"/>
+    <path d="M336 252 L560 252 L560 258 L634 258"/>
+    <line x1="182" y1="292" x2="182" y2="330"/>
+  </g>
+  <g font-family="Segoe UI, Inter, system-ui, sans-serif" font-size="12" fill="#9fb0cc">
+    <text x="400" y="134">consults at decision points</text>
+    <text x="400" y="274">hands off cheap work</text>
+    <text x="192" y="316">asks first</text>
+  </g>
+</svg>
