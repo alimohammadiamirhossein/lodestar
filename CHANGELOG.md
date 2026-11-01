@@ -8,6 +8,9 @@
 - `dream` and `brief`: nightly refresh and a brief of what changed, also as the `whats_new` tool
   and `/lodestar:brief`.
 - `forget`; nested roots are refused.
+- Notes between agents: `ideas` and `idea` tools and CLI. Agents add and vote; the dream merges
+  duplicates, ranks, adopts or retires notes and writes `ideas/digest.md`. Notes are scoped to a
+  project and always shown as unverified data.
 - Token estimates (`~N tok`) in results, `lodestar savings` and the `token_savings` tool, and an
   opt-in read guard (`lodestar hooks`) that shows read costs and stops unchanged repeat reads.
 - Search drops ancestor folders that matched only through a child and folds sibling files.
