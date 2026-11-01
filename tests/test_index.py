@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 import pytest
 
@@ -79,7 +80,8 @@ def test_unchanged_collapsed_directory_is_not_rescanned(conn, tree, monkeypatch)
 def test_changed_collapsed_directory_is_rescanned(conn, tree):
     index.index_root(conn, str(tree))
     touch(tree / "images" / "img_9999.jpg")
-    os.utime(tree / "images", ns=(1, 2_000_000_000_000_000_000))
+    future = time.time_ns() + 86_400 * 10**9
+    os.utime(tree / "images", ns=(future, future))
     index.index_root(conn, str(tree))
     assert row(conn, tree / "images")["n_files"] == 251
 
@@ -119,3 +121,52 @@ def test_experiment_markers(conn, tmp_path):
 def test_missing_root_is_an_error(conn, tmp_path):
     with pytest.raises(FileNotFoundError):
         index.index_root(conn, str(tmp_path / "nope"))
+
+
+def test_foreign_root_is_refused_unless_allowed(conn, tree, monkeypatch):
+    monkeypatch.setattr(index.os, "getuid", lambda: os.stat(tree).st_uid + 1, raising=False)
+    with pytest.raises(index.ForeignRoot):
+        index.index_root(conn, str(tree))
+    assert index.index_root(conn, str(tree), allow_foreign=True)["status"] == "ok"
+
+
+def test_allow_foreign_is_remembered_for_refreshes(conn, tree, monkeypatch):
+    monkeypatch.setattr(index.os, "getuid", lambda: os.stat(tree).st_uid + 1, raising=False)
+    index.index_root(conn, str(tree), allow_foreign=True)
+    [target] = db.known_roots(conn)
+    assert target["allow_foreign"] is True
+    index.index_root(conn, target["root"], allow_foreign=target["allow_foreign"])
+
+
+def test_other_filesystems_are_skipped(conn, tree, monkeypatch):
+    other = os.stat(tree).st_dev + 1
+
+    class Wrapped:
+        def __init__(self, entry):
+            self._e = entry
+
+        def __getattr__(self, name):
+            return getattr(self._e, name)
+
+        def stat(self, *a, **k):
+            result = self._e.stat(*a, **k)
+            if self._e.name == "images":
+                return os.stat_result((*result[:2], other, *result[3:]))
+            return result
+
+    real_scandir = os.scandir
+
+    class Scan:
+        def __init__(self, path):
+            self._it = real_scandir(path)
+
+        def __enter__(self):
+            return (Wrapped(e) for e in self._it.__enter__())
+
+        def __exit__(self, *exc):
+            return self._it.__exit__(*exc)
+
+    monkeypatch.setattr(index.os, "scandir", Scan)
+    index.index_root(conn, str(tree))
+    assert row(conn, tree / "images") is None
+    assert row(conn, tree / "code") is not None

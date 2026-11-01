@@ -49,15 +49,17 @@ def main(argv: list[str] | None = None) -> int:
 
     conn = db.connect()
     if args.cmd == "index":
-        roots = args.roots or db.known_roots(conn)
-        if not roots:
+        targets = ([{"root": r, "allow_foreign": args.allow_foreign} for r in args.roots]
+                   or db.known_roots(conn))
+        if not targets:
             print("Name a root to index, for example: lodestar index ~/projects", file=sys.stderr)
             return 2
         status = 0
-        for root in roots:
+        for target in targets:
+            root = target["root"]
             try:
                 s = index.index_root(conn, root, full=args.full, max_seconds=args.max_seconds,
-                                     allow_foreign=args.allow_foreign)
+                                     allow_foreign=target["allow_foreign"])
             except (FileNotFoundError, index.ForeignRoot) as exc:
                 print(f"{root}: {exc}", file=sys.stderr)
                 status = 1

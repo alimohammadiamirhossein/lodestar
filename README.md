@@ -21,6 +21,10 @@ one SQLite file. It never reads file contents and never calls a model.
 - **Incremental.** An unchanged collapsed folder (same mtime) is kept without rescanning. Deleted
   paths leave the index. `--full` rescans everything; `--max-seconds` stops early and keeps a
   partial index without deleting anything.
+- **Known limit.** A collapsed folder is reused when its own mtime is unchanged, and a folder's
+  mtime does not change when files are added deeper down. Counts under a folder collapsed for
+  having many subfolders can therefore go stale until `lodestar index --full` runs; schedule it
+  weekly.
 - **Bounded answers.** Every query returns a capped list of short lines.
 - **Shared machines.** You name the roots. A root owned by another user is refused unless you
   pass `--allow-foreign`. Symlinks are not followed, other filesystems are skipped, and caches,

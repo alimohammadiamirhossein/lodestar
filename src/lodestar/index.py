@@ -305,8 +305,9 @@ def index_root(conn: sqlite3.Connection, root: str, *, full: bool = False,
         _check_owner(root_path)
     start = time.monotonic()
     deadline = start + max_seconds if max_seconds else None
-    run = conn.execute("INSERT INTO runs(root, started, status) VALUES (?,?,'running')",
-                       (norm(root_path), time.time())).lastrowid
+    run = conn.execute(
+        "INSERT INTO runs(root, started, status, allow_foreign) VALUES (?,?,'running',?)",
+        (norm(root_path), time.time(), int(allow_foreign))).lastrowid
     indexer = Indexer(conn, root_path, run, full=full, deadline=deadline)
     status = "ok"
     try:

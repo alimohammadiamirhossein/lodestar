@@ -69,11 +69,12 @@ def reindex(max_seconds: float = 120) -> str:
         if not roots:
             return "Nothing to refresh: the user has not indexed any root yet."
         lines = []
-        for root in roots:
+        for target in roots:
             try:
-                s = index.index_root(conn, root, max_seconds=max_seconds)
+                s = index.index_root(conn, target["root"], max_seconds=max_seconds,
+                                     allow_foreign=target["allow_foreign"])
             except (FileNotFoundError, index.ForeignRoot) as exc:
-                lines.append(f"{root}: {exc}")
+                lines.append(f"{target['root']}: {exc}")
                 continue
             lines.append(f"{s['root']}: {s['status']}, {s['files']:,} files, {s['nodes']:,} nodes, "
                          f"{s['dirs_reused']:,} dirs reused, {s['seconds']}s")

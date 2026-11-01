@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS runs (
     started REAL NOT NULL,
     finished REAL,
     status TEXT NOT NULL,
-    nodes INTEGER NOT NULL DEFAULT 0
+    nodes INTEGER NOT NULL DEFAULT 0,
+    allow_foreign INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS nodes_fts USING fts5(
@@ -77,9 +78,15 @@ def connect(db_path: str | Path | None = None) -> sqlite3.Connection:
         if "fts5" in str(exc).lower():
             raise RuntimeError("This Python's SQLite was built without FTS5, which Lodestar needs.") from exc
         raise
+    columns = {r["name"] for r in conn.execute("PRAGMA table_info(runs)")}
+    if "allow_foreign" not in columns:
+        conn.execute("ALTER TABLE runs ADD COLUMN allow_foreign INTEGER NOT NULL DEFAULT 0")
     return conn
 
 
-def known_roots(conn: sqlite3.Connection) -> list[str]:
-    rows = conn.execute("SELECT DISTINCT root FROM runs ORDER BY root").fetchall()
-    return [r["root"] for r in rows]
+def known_roots(conn: sqlite3.Connection) -> list[dict]:
+    """Roots indexed before, each with whether the user allowed it although another user owns it."""
+    rows = conn.execute(
+        "SELECT root, max(allow_foreign) AS allow_foreign FROM runs GROUP BY root ORDER BY root"
+    ).fetchall()
+    return [{"root": r["root"], "allow_foreign": bool(r["allow_foreign"])} for r in rows]
