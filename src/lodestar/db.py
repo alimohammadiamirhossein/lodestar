@@ -6,6 +6,8 @@ import os
 import sqlite3
 from pathlib import Path
 
+from .index import norm
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS nodes (
     path TEXT PRIMARY KEY,
@@ -35,7 +37,8 @@ CREATE TABLE IF NOT EXISTS runs (
     finished REAL,
     status TEXT NOT NULL,
     nodes INTEGER NOT NULL DEFAULT 0,
-    allow_foreign INTEGER NOT NULL DEFAULT 0
+    allow_foreign INTEGER NOT NULL DEFAULT 0,
+    full INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS nodes_fts USING fts5(
@@ -81,6 +84,8 @@ def connect(db_path: str | Path | None = None) -> sqlite3.Connection:
     columns = {r["name"] for r in conn.execute("PRAGMA table_info(runs)")}
     if "allow_foreign" not in columns:
         conn.execute("ALTER TABLE runs ADD COLUMN allow_foreign INTEGER NOT NULL DEFAULT 0")
+    if "full" not in columns:
+        conn.execute("ALTER TABLE runs ADD COLUMN full INTEGER NOT NULL DEFAULT 0")
     return conn
 
 
@@ -90,3 +95,12 @@ def known_roots(conn: sqlite3.Connection) -> list[dict]:
         "SELECT root, max(allow_foreign) AS allow_foreign FROM runs GROUP BY root ORDER BY root"
     ).fetchall()
     return [{"root": r["root"], "allow_foreign": bool(r["allow_foreign"])} for r in rows]
+
+
+def forget_root(conn: sqlite3.Connection, root: str) -> int:
+    """Delete a root's nodes and runs, returning how many nodes were removed."""
+    key = norm(root)
+    nodes = conn.execute("DELETE FROM nodes WHERE root=?", (key,)).rowcount
+    conn.execute("DELETE FROM runs WHERE root=?", (key,))
+    conn.commit()
+    return nodes

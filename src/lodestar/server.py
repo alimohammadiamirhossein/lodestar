@@ -5,7 +5,7 @@ from __future__ import annotations
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
-from . import db, index, query
+from . import db, dream, index, query
 
 INSTRUCTIONS = """\
 Lodestar is a map of the user's file trees. It never reads file contents.
@@ -16,6 +16,7 @@ Ask it before searching or listing folders yourself, then open only what it name
 - `tree`: list the indexed children of a path, biggest first.
 - `info`: describe one path.
 - `stats`: what is indexed and when.
+- `whats_new`: what changed at the last nightly dream.
 - `reindex`: refresh the roots the user indexed before. It cannot add new roots.
 A collapsed entry means its individual files are not indexed; list that folder to see them.
 """
@@ -58,6 +59,12 @@ def stats() -> str:
         return query.stats(conn)
 
 
+@mcp.tool(annotations=_read_only("What changed at the last dream"))
+def whats_new() -> str:
+    """What changed at the last nightly dream."""
+    return dream.latest_brief(db.home())
+
+
 @mcp.tool(annotations=ToolAnnotations(title="Refresh the index", readOnlyHint=False,
                                       destructiveHint=False, idempotentHint=True,
                                       openWorldHint=False))
@@ -69,11 +76,16 @@ def reindex(max_seconds: float = 120) -> str:
         if not roots:
             return "Nothing to refresh: the user has not indexed any root yet."
         lines = []
+        deadline = index.start_deadline(max_seconds)
         for target in roots:
+            remaining = index.seconds_left(deadline)
+            if remaining is not None and remaining <= 0:
+                lines.append(f"{target['root']}: skipped (time budget spent)")
+                continue
             try:
-                s = index.index_root(conn, target["root"], max_seconds=max_seconds,
+                s = index.index_root(conn, target["root"], max_seconds=remaining,
                                      allow_foreign=target["allow_foreign"])
-            except (FileNotFoundError, index.ForeignRoot) as exc:
+            except (FileNotFoundError, index.ForeignRoot, index.NestedRoot) as exc:
                 lines.append(f"{target['root']}: {exc}")
                 continue
             lines.append(f"{s['root']}: {s['status']}, {s['files']:,} files, {s['nodes']:,} nodes, "

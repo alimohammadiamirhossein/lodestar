@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from lodestar import db, index
+from lodestar import db, index, query
 
 
 @pytest.fixture
@@ -121,6 +121,46 @@ def test_experiment_markers(conn, tmp_path):
 def test_missing_root_is_an_error(conn, tmp_path):
     with pytest.raises(FileNotFoundError):
         index.index_root(conn, str(tmp_path / "nope"))
+
+
+def test_nested_root_is_refused_after_parent(conn, tree):
+    index.index_root(conn, str(tree))
+    with pytest.raises(index.NestedRoot):
+        index.index_root(conn, str(tree / "code"))
+    assert "code" in query.tree(conn, str(tree))
+    assert row(conn, tree / "code")["root"] == index.norm(str(tree))
+
+
+def test_nested_root_is_refused_after_child(conn, tree):
+    index.index_root(conn, str(tree / "code"))
+    with pytest.raises(index.NestedRoot):
+        index.index_root(conn, str(tree))
+    assert row(conn, tree / "code")["root"] == index.norm(str(tree / "code"))
+
+
+def test_sibling_roots_with_common_prefix_are_allowed(conn, tmp_path):
+    a = tmp_path / "data" / "a"
+    ab = tmp_path / "data" / "ab"
+    touch(a / "one.txt")
+    touch(ab / "two.txt")
+    index.index_root(conn, str(a))
+    index.index_root(conn, str(ab))
+    assert row(conn, a)["root"] == index.norm(str(a))
+    assert row(conn, ab)["root"] == index.norm(str(ab))
+
+
+def test_same_root_can_be_reindexed(conn, tree):
+    index.index_root(conn, str(tree))
+    assert index.index_root(conn, str(tree))["status"] == "ok"
+
+
+def test_forget_root_removes_nodes_and_runs(conn, tree):
+    index.index_root(conn, str(tree))
+    root = index.norm(str(tree))
+    removed = db.forget_root(conn, str(tree))
+    assert removed > 0
+    assert conn.execute("SELECT count(*) FROM nodes WHERE root=?", (root,)).fetchone()[0] == 0
+    assert conn.execute("SELECT count(*) FROM runs WHERE root=?", (root,)).fetchone()[0] == 0
 
 
 def test_foreign_root_is_refused_unless_allowed(conn, tree, monkeypatch):

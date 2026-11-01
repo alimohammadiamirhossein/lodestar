@@ -43,6 +43,10 @@ class ForeignRoot(Exception):
     """The root belongs to another user."""
 
 
+class NestedRoot(ValueError):
+    """The root is inside, or contains, an already indexed root."""
+
+
 @dataclass
 class Sub:
     """Totals for a subtree, excluding the directory itself."""
@@ -63,6 +67,10 @@ class Sub:
 
 def norm(path: str) -> str:
     return os.path.abspath(path).replace("\\", "/")
+
+
+def _inside(child: str, parent: str) -> bool:
+    return child != parent and child.startswith(parent.rstrip("/") + "/")
 
 
 def join(key: str, name: str) -> str:
@@ -295,19 +303,36 @@ def _check_owner(root: str) -> None:
         raise ForeignRoot(f"{root} is owned by another user; pass allow_foreign to index it anyway")
 
 
+def start_deadline(max_seconds: float | None) -> float | None:
+    """Return a monotonic deadline shared by several roots, or None for no budget."""
+    return None if max_seconds is None else time.monotonic() + max_seconds
+
+
+def seconds_left(deadline: float | None) -> float | None:
+    """Seconds left before a shared deadline, or None when there is no deadline."""
+    return None if deadline is None else deadline - time.monotonic()
+
+
 def index_root(conn: sqlite3.Connection, root: str, *, full: bool = False,
                max_seconds: float | None = None, allow_foreign: bool = False) -> dict:
     """Index one root. Returns a summary; status is 'ok' or 'partial' (time budget ran out)."""
     root_path = str(Path(root).expanduser())
     if not os.path.isdir(root_path):
         raise FileNotFoundError(f"{root_path} is not a directory")
+    root_key = norm(root_path)
+    for row in conn.execute("SELECT DISTINCT root FROM runs"):
+        other = norm(row["root"])
+        if _inside(root_key, other):
+            raise NestedRoot(f"{root_key} is inside indexed root {other}")
+        if _inside(other, root_key):
+            raise NestedRoot(f"{root_key} contains indexed root {other}")
     if not allow_foreign:
         _check_owner(root_path)
     start = time.monotonic()
     deadline = start + max_seconds if max_seconds else None
     run = conn.execute(
-        "INSERT INTO runs(root, started, status, allow_foreign) VALUES (?,?,'running',?)",
-        (norm(root_path), time.time(), int(allow_foreign))).lastrowid
+        "INSERT INTO runs(root, started, status, allow_foreign, full) VALUES (?,?,'running',?,?)",
+        (root_key, time.time(), int(allow_foreign), int(full))).lastrowid
     indexer = Indexer(conn, root_path, run, full=full, deadline=deadline)
     status = "ok"
     try:
