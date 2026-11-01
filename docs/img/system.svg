@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" role="img" aria-labelledby="t d">
   <title id="t">Where Lodestar fits</title>
-  <desc id="d">A Sonnet main agent consults an Opus advisor, hands cheap work to DeepSeek, and asks the Lodestar map first. The structure index and the nightly refresh are built; the code graph, experiment table and summary pages are planned.</desc>
+  <desc id="d">An agent asks the Lodestar map first, and can optionally consult an advisor model and hand cheap work to a worker model. In Lodestar, the structure index and the nightly refresh are built; the code graph, experiment table and summary pages are planned.</desc>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
       <path d="M0 0 L10 5 L0 10 z" fill="#8aa0c4"/>
@@ -9,7 +9,7 @@
   <rect width="960" height="560" rx="18" fill="#0b1220"/>
   <g font-family="Segoe UI, Inter, system-ui, sans-serif">
     <text x="32" y="44" font-size="22" font-weight="700" fill="#f4f7fb">Where Lodestar fits</text>
-    <text x="32" y="68" font-size="14" fill="#9fb0cc">Most of the saving should come from agents not reading files.</text>
+    <text x="32" y="68" font-size="14" fill="#9fb0cc">Lodestar works alone. The models around it are optional context.</text>
 
     <rect x="32" y="96" width="220" height="56" rx="12" fill="#16203a" stroke="#2a3a5f"/>
     <text x="52" y="130" font-size="16" fill="#f4f7fb">You</text>
@@ -18,20 +18,19 @@
     <text x="52" y="226" font-size="17" font-weight="600" fill="#f4f7fb">Sonnet 5.5</text>
     <text x="52" y="248" font-size="13" fill="#9fb0cc">main agent: plans, routes, checks</text>
     <rect x="52" y="260" width="82" height="18" rx="9" fill="#60a5fa"/>
-    <text x="64" y="273" font-size="11" font-weight="600" fill="#0b1220">CONFIGURED</text>
+    <text x="64" y="273" font-size="11" font-weight="600" fill="#0b1220">YOUR AGENT</text>
 
     <rect x="640" y="96" width="288" height="92" rx="12" fill="#16203a" stroke="#60a5fa"/>
     <text x="660" y="126" font-size="17" font-weight="600" fill="#f4f7fb">Opus advisor</text>
     <text x="660" y="148" font-size="13" fill="#9fb0cc">plan check, unstick, sign-off</text>
-    <rect x="660" y="160" width="82" height="18" rx="9" fill="#60a5fa"/>
-    <text x="672" y="173" font-size="11" font-weight="600" fill="#0b1220">CONFIGURED</text>
+    <rect x="660" y="160" width="70" height="18" rx="9" fill="#6f84a8"/>
+    <text x="672" y="173" font-size="11" font-weight="600" fill="#0b1220">OPTIONAL</text>
 
     <rect x="640" y="212" width="288" height="92" rx="12" fill="#16203a" stroke="#60a5fa"/>
-    <text x="660" y="242" font-size="17" font-weight="600" fill="#f4f7fb">DeepSeek via Deputy</text>
+    <text x="660" y="242" font-size="17" font-weight="600" fill="#f4f7fb">DeepSeek worker</text>
     <text x="660" y="264" font-size="13" fill="#9fb0cc">reading, checked coding, grading</text>
-    <rect x="660" y="276" width="96" height="18" rx="9" fill="#60a5fa"/>
-    <text x="672" y="289" font-size="11" font-weight="600" fill="#0b1220">WORKS TODAY</text>
-    <text x="766" y="289" font-size="11" fill="#9fb0cc">upgrades planned</text>
+    <rect x="660" y="276" width="70" height="18" rx="9" fill="#6f84a8"/>
+    <text x="672" y="289" font-size="11" font-weight="600" fill="#0b1220">OPTIONAL</text>
 
     <rect x="32" y="336" width="896" height="132" rx="14" fill="#2b2410" stroke="#f5b942"/>
     <text x="52" y="366" font-size="17" font-weight="600" fill="#f5b942">Lodestar map</text>
