@@ -71,6 +71,46 @@ WHEN old.name IS NOT new.name OR old.path IS NOT new.path
     INSERT INTO nodes_fts(rowid, name, path, kind, note)
     VALUES (new.rowid, new.name, new.path, new.kind, new.note);
 END;
+
+CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS ideas (
+    id INTEGER PRIMARY KEY,
+    ts REAL NOT NULL,
+    author TEXT NOT NULL,
+    project TEXT NOT NULL,
+    topic TEXT NOT NULL,
+    text TEXT NOT NULL,
+    evidence TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'open',
+    merged_into INTEGER,
+    suspect INTEGER NOT NULL DEFAULT 0,
+    uses INTEGER NOT NULL DEFAULT 0,
+    last_used REAL
+);
+
+CREATE TABLE IF NOT EXISTS idea_votes (
+    idea_id INTEGER NOT NULL,
+    voter TEXT NOT NULL,
+    vote INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    ts REAL NOT NULL,
+    PRIMARY KEY (idea_id, voter)
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS ideas_fts USING fts5(
+    topic, text, content='ideas', content_rowid='id'
+);
+
+CREATE TRIGGER IF NOT EXISTS ideas_ai AFTER INSERT ON ideas BEGIN
+    INSERT INTO ideas_fts(rowid, topic, text) VALUES (new.id, new.topic, new.text);
+END;
+CREATE TRIGGER IF NOT EXISTS ideas_ad AFTER DELETE ON ideas BEGIN
+    INSERT INTO ideas_fts(ideas_fts, rowid, topic, text) VALUES ('delete', old.id, old.topic, old.text);
+END;
 """
 
 

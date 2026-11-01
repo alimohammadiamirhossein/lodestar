@@ -97,9 +97,9 @@ def test_cli_without_command_prints_help(capsys):
     assert "usage" in capsys.readouterr().out
 
 
-def test_server_exposes_seven_tools():
+def test_server_exposes_nine_tools():
     names = {t.name for t in asyncio.run(server.mcp.list_tools())}
-    assert names == {"find", "tree", "info", "stats", "whats_new", "reindex", "token_savings"}
+    assert names == {"find", "tree", "info", "stats", "whats_new", "reindex", "token_savings", "ideas", "idea"}
 
 
 def test_server_tools_answer(home):

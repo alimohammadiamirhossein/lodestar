@@ -7,7 +7,7 @@ import re
 import time
 from pathlib import Path
 
-from . import db, index, query
+from . import db, ideas, index, query
 
 WEEK = 7 * 24 * 60 * 60
 GIB = 1024 ** 3
@@ -135,7 +135,7 @@ def _capped(lines: list[str]) -> list[str]:
 
 
 def _brief(now: float, refreshed: int, problems: list[str],
-           changes: tuple[list[str], list[str], list[str]]) -> str:
+           changes: tuple[list[str], list[str], list[str]], idea_lines: list[str] = ()) -> str:
     new_lines, removed_lines, changed_lines = changes
     lines = [
         "# Lodestar brief " + time.strftime("%Y-%m-%d %H:%M", time.localtime(now)),
@@ -144,7 +144,8 @@ def _brief(now: float, refreshed: int, problems: list[str],
     if not (new_lines or removed_lines or changed_lines):
         lines.append("Nothing changed.")
     for title, items in (("New", new_lines), ("Removed", removed_lines),
-                         ("Changed", changed_lines), ("Problems", problems)):
+                         ("Changed", changed_lines), ("Ideas", list(idea_lines)),
+                         ("Problems", problems)):
         if items:
             lines.append(f"## {title}")
             lines.extend(_capped(items))
@@ -205,7 +206,8 @@ def dream(conn, home: Path, *, max_seconds: float | None = None, full: bool = Fa
                 problems.append(f"{target['root']}: partial refresh, changes not compared")
         after = _snapshot(conn)
         diff_roots = [t["root"] for t in roots if statuses.get(t["root"]) == "ok"]
-        text = _brief(current, refreshed, problems, _diff(before, after, diff_roots))
+        idea_lines = ideas.consolidate(conn, home, now=current)
+        text = _brief(current, refreshed, problems, _diff(before, after, diff_roots), idea_lines)
         _write(home, current, text)
         return text
     finally:

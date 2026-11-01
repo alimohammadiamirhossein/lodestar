@@ -7,7 +7,7 @@ import json
 import sys
 import time
 
-from . import __version__, db, dream, guard, index, query, savings
+from . import __version__, db, dream, guard, ideas, index, query, savings
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -37,6 +37,24 @@ def _parser() -> argparse.ArgumentParser:
 
     v = sub.add_parser("savings", help="estimated tokens saved so far")
     v.add_argument("--days", type=float, help="only the last N days")
+
+    s = sub.add_parser("ideas", help="notes agents left for each other")
+    s.add_argument("query", nargs="*")
+    s.add_argument("--id", type=int, help="show one note in full")
+    s.add_argument("--all", action="store_true", help="every project, not just this one")
+    s.add_argument("--limit", type=int, default=8)
+
+    a = sub.add_parser("idea", help="add a note or vote on one")
+    asub = a.add_subparsers(dest="idea_cmd", required=True)
+    aa = asub.add_parser("add")
+    aa.add_argument("text")
+    aa.add_argument("--topic", default="")
+    aa.add_argument("--evidence", nargs="*", default=[], help="files that back the note up")
+    aa.add_argument("--global", dest="is_global", action="store_true", help="not tied to this project")
+    av = asub.add_parser("vote")
+    av.add_argument("id", type=int)
+    av.add_argument("value", choices=["up", "down"])
+    av.add_argument("--reason", default="")
 
     h = sub.add_parser("hook", help="Claude Code hook handler (reads the hook JSON on stdin)")
     h.add_argument("event", choices=["pre-read", "session-start"])
@@ -134,6 +152,17 @@ def main(argv: list[str] | None = None) -> int:
         print(answer)
     elif args.cmd == "stats":
         print(query.stats(conn))
+    elif args.cmd == "ideas":
+        if args.id:
+            print(ideas.show(conn, args.id))
+        else:
+            print(ideas.find(conn, " ".join(args.query), everything=args.all, limit=args.limit))
+    elif args.cmd == "idea":
+        if args.idea_cmd == "add":
+            print(ideas.add(conn, args.text, args.topic, args.evidence, author="cli",
+                            is_global=args.is_global))
+        else:
+            print(ideas.vote(conn, args.id, 1 if args.value == "up" else -1, args.reason, voter="cli"))
     elif args.cmd == "savings":
         since = time.time() - args.days * 86400 if args.days else None
         print(savings.report(conn, since))

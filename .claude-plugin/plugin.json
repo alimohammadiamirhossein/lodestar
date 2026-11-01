@@ -15,7 +15,10 @@
   "mcpServers": {
     "lodestar": {
       "command": "uvx",
-      "args": ["--from", "${CLAUDE_PLUGIN_ROOT}", "lodestar", "serve"]
+      "args": ["--from", "${CLAUDE_PLUGIN_ROOT}", "lodestar", "serve"],
+      "env": {
+        "CLAUDE_PROJECT_DIR": "${CLAUDE_PROJECT_DIR}"
+      }
     }
   }
 }
