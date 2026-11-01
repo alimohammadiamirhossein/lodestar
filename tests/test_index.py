@@ -98,10 +98,12 @@ def test_full_flag_ignores_shortcuts(conn, tree):
     assert summary["dirs_reused"] == 0
 
 
-def test_time_budget_leaves_a_partial_index_and_deletes_nothing(conn, tree):
+def test_time_budget_leaves_a_partial_index_and_deletes_nothing(conn, tree, monkeypatch):
     index.index_root(conn, str(tree))
     (tree / "code" / "train_loader.py").unlink()
-    summary = index.index_root(conn, str(tree), full=True, max_seconds=1e-9)
+    ticks = iter(range(10_000))
+    monkeypatch.setattr(index.time, "monotonic", lambda: next(ticks))
+    summary = index.index_root(conn, str(tree), full=True, max_seconds=3)
     assert summary["status"] == "partial"
     assert row(conn, tree / "code" / "train_loader.py") is not None
 
