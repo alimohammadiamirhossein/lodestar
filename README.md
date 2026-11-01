@@ -110,6 +110,42 @@ Or add the server by hand: `claude mcp add lodestar -- lodestar serve`.
 
 The index lives in `~/.lodestar/index.db` (override with `LODESTAR_HOME`).
 
+## Token estimates and savings
+
+Every file and folder in the index carries an estimate of what reading its text would cost, shown
+as `~N tok` (4 bytes per token; media, binaries, PDFs and office files are not estimated), for example:
+
+```text
+file     lab/notes/plan.md  1.6 KB  ~400 tok
+dataset  lab/logs  [collapsed] 5,000 files, ~38.1 MB, ~9.5M tok
+```
+
+An agent can see the price of a file before it reads it, and a `[collapsed]` folder tells it
+roughly what dumping it would cost.
+
+`lodestar savings` (the `token_savings` tool) keeps a ledger of what Lodestar saved, counting two
+things only:
+
+- **Index answers.** A collapsed folder shown as one line stands in for the listing an agent would
+  otherwise have read, at 8 tokens per entry, minus the tokens the answer cost.
+- **Repeat reads.** With the read guard on, a Read of a file that is already in the conversation
+  and unchanged is stopped once, at the file's estimated tokens. If the agent asks again straight
+  away it is let through and the saving is taken back.
+
+These are estimates, not billing, and the baseline (an agent that lists everything) is an
+assumption. Searches that return ordinary files save nothing and are recorded as such.
+
+### The read guard (opt-in)
+
+The guard is a pair of Claude Code hooks. Before each Read it adds a one-line note with the cost
+and the savings so far (for files over 500 tokens; `LODESTAR_QUIET=1` turns the note off), suggests
+`offset` and `limit` for files over 6,000 tokens, and stops an unchanged repeat read once. It
+forgets what was read when the conversation is cleared or compacted, because the contents are no
+longer in context. It never breaks a read: any error means it does nothing.
+
+It is not on by default because it runs on every Read. `lodestar hooks` prints the settings to add
+to `~/.claude/settings.json`; `lodestar` must be on your `PATH`.
+
 ## Dreaming
 
 `lodestar dream` refreshes every indexed root and writes a short brief of what changed: new and
@@ -130,6 +166,9 @@ roots that had problems. It reads no file contents and calls no model. Agents re
 | `lodestar tree PATH` | `tree` | Indexed children of a folder, biggest first |
 | `lodestar info PATH` | `info` | Kind, counts, size, extensions, sample names |
 | `lodestar stats` | `stats` | What is indexed and when |
+| `lodestar savings [--days N]` | `token_savings` | Estimated tokens saved so far |
+| `lodestar hooks` | | Print the settings that turn the read guard on |
+| `lodestar hook pre-read` | | The hook handler itself (reads hook JSON on stdin) |
 | `lodestar dream` | | Refresh all roots, write the brief |
 | `lodestar brief` | `whats_new` | Show what changed at the last dream |
 | `lodestar forget ROOT` | | Remove a root and its rows |
@@ -142,6 +181,7 @@ experiment markers and file counts per top-level folder.
 
 - [x] Structure index with collapsing, kinds, incremental refresh
 - [x] `find`, `tree`, `info`, `stats`; CLI, MCP server, plugin and skill
+- [x] Token estimates in results, a savings ledger and an opt-in read guard
 - [ ] Benchmark against plain Glob and Grep on a large tree
 - [x] Group search hits by parent
 - [ ] Tag sensitive file names

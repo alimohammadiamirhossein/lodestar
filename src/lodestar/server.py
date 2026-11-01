@@ -5,7 +5,7 @@ from __future__ import annotations
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 
-from . import db, dream, index, query
+from . import db, dream, index, query, savings
 
 INSTRUCTIONS = """\
 Lodestar is a map of the user's file trees. It never reads file contents.
@@ -17,6 +17,7 @@ Ask it before searching or listing folders yourself, then open only what it name
 - `info`: describe one path.
 - `stats`: what is indexed and when.
 - `whats_new`: what changed at the last nightly dream.
+- `token_savings`: estimated tokens saved so far. Lines show `~N tok`, what reading a file costs.
 - `reindex`: refresh the roots the user indexed before. It cannot add new roots.
 A collapsed entry means its individual files are not indexed; list that folder to see them.
 """
@@ -35,21 +36,27 @@ def find(query_text: str, kind: str = "", limit: int = 20) -> str:
     kind: optional filter (repo, experiment, dataset, checkpoints, media, docs, dir, file).
     limit: at most 50 results."""
     with _conn() as conn:
-        return query.find(conn, query_text, kind, limit)
+        answer = query.find(conn, query_text, kind, limit)
+        savings.record(conn, "find", answer)
+        return answer
 
 
 @mcp.tool(annotations=_read_only("List indexed children"))
 def tree(path: str, limit: int = 40) -> str:
     """List the indexed children of a folder, biggest first."""
     with _conn() as conn:
-        return query.tree(conn, path, limit)
+        answer = query.tree(conn, path, limit)
+        savings.record(conn, "tree", answer)
+        return answer
 
 
 @mcp.tool(annotations=_read_only("Describe a path"))
 def info(path: str) -> str:
     """Describe one indexed path: kind, counts, size, extensions, sample names, last index time."""
     with _conn() as conn:
-        return query.info(conn, path)
+        answer = query.info(conn, path)
+        savings.record(conn, "info", answer)
+        return answer
 
 
 @mcp.tool(annotations=_read_only("What is indexed"))
@@ -63,6 +70,13 @@ def stats() -> str:
 def whats_new() -> str:
     """What changed at the last nightly dream."""
     return dream.latest_brief(db.home())
+
+
+@mcp.tool(annotations=_read_only("Estimated tokens saved"))
+def token_savings() -> str:
+    """Estimated tokens saved so far by lodestar answers and the read guard. Estimates only."""
+    with _conn() as conn:
+        return savings.report(conn)
 
 
 @mcp.tool(annotations=ToolAnnotations(title="Refresh the index", readOnlyHint=False,

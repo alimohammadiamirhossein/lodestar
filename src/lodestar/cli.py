@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+import time
 
-from . import __version__, db, dream, index, query
+from . import __version__, db, dream, guard, index, query, savings
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -33,6 +35,13 @@ def _parser() -> argparse.ArgumentParser:
 
     sub.add_parser("stats", help="what is indexed")
 
+    v = sub.add_parser("savings", help="estimated tokens saved so far")
+    v.add_argument("--days", type=float, help="only the last N days")
+
+    h = sub.add_parser("hook", help="Claude Code hook handler (reads the hook JSON on stdin)")
+    h.add_argument("event", choices=["pre-read", "session-start"])
+    sub.add_parser("hooks", help="print the hook settings that turn the read guard on")
+
     d = sub.add_parser("dream", help="refresh all roots and write a brief of what changed")
     d.add_argument("--max-seconds", type=float, help="stop early and keep a partial index")
     d.add_argument("--full", action="store_true", help="rescan collapsed directories too")
@@ -55,6 +64,23 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "serve":
         from .server import run
         run()
+        return 0
+
+    if args.cmd == "hook":
+        try:
+            payload = json.load(sys.stdin)
+            if args.event == "pre-read":
+                answer = guard.pre_read(payload)
+            else:
+                guard.session_start(payload)
+                answer = None
+            if answer:
+                print(json.dumps(answer))
+        except Exception:
+            pass  # a hook must never break the tool call it watches
+        return 0
+    if args.cmd == "hooks":
+        print(guard.hooks_snippet())
         return 0
 
     conn = db.connect()
@@ -97,12 +123,18 @@ def main(argv: list[str] | None = None) -> int:
         nodes = db.forget_root(conn, root)
         print(f"forgot {root} ({nodes} nodes)")
         return 0
-    if args.cmd == "find":
-        print(query.find(conn, " ".join(args.query), args.kind, args.limit))
-    elif args.cmd == "info":
-        print(query.info(conn, args.path))
-    elif args.cmd == "tree":
-        print(query.tree(conn, args.path, args.limit))
+    if args.cmd in ("find", "info", "tree"):
+        if args.cmd == "find":
+            answer = query.find(conn, " ".join(args.query), args.kind, args.limit)
+        elif args.cmd == "info":
+            answer = query.info(conn, args.path)
+        else:
+            answer = query.tree(conn, args.path, args.limit)
+        savings.record(conn, args.cmd, answer)
+        print(answer)
     elif args.cmd == "stats":
         print(query.stats(conn))
+    elif args.cmd == "savings":
+        since = time.time() - args.days * 86400 if args.days else None
+        print(savings.report(conn, since))
     return 0

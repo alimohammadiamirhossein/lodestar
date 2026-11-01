@@ -10,8 +10,10 @@ Lodestar answers from an index of the user's file trees and never reads file con
 1. `find` with words from the name or path, or an extension (`jpg`). Narrow with `kind`: `repo`,
    `experiment`, `dataset`, `checkpoints`, `media`, `docs`, `dir`, `file`.
 2. `tree` on a result to see its children, biggest first. `info` gives counts, size and samples.
-3. `whats_new` for what changed at the last nightly dream. Call it first in a new session.
-4. Open only the files these name.
+3. Lines end with `~N tok`, what reading that text would cost. Prefer a narrow read (offset and
+   limit) for anything large; `token_savings` shows what Lodestar has saved.
+4. `whats_new` for what changed at the last nightly dream. Call it first in a new session.
+5. Open only the files these name.
 
 A `[collapsed]` entry is a folder with hundreds of files or many subfolders. Its files are not
 indexed one by one; list that folder to see them.
