@@ -40,7 +40,8 @@ def test_find_filters_by_kind(conn):
 
 
 def test_find_limit_and_empty(conn):
-    assert len(query.find(conn, "py", limit=1).splitlines()) == 1
+    one = query.find(conn, "py", limit=1).splitlines()
+    assert len(one) == 2 and one[1].startswith("... ")
     assert query.find(conn, "zzzz").startswith("No match")
     assert query.find(conn, "!!!").startswith("Give at least")
 
@@ -80,3 +81,52 @@ def test_stats(conn, lab):
 def test_human_size(n, text):
     assert query.human_size(n) == text
     assert query.human_size(n, approx=True) == "~" + text
+
+
+@pytest.fixture
+def messy(tmp_path):
+    root = tmp_path / "lab"
+    for name in ("metric_a.py", "metric_b.py", "metric_c.py", "metric_d.py", "metric_e.py"):
+        (root / "code" / "utils").mkdir(parents=True, exist_ok=True)
+        (root / "code" / "utils" / name).write_text("x")
+    (root / "code" / "train_loader.py").write_text("x")
+    for i in range(250):
+        p = root / "datasets" / "faces" / f"img_{i:04d}.jpg"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("x")
+    c = db.connect(tmp_path / "home" / "index.db")
+    index.index_root(c, str(root))
+    return c, root
+
+
+def test_ancestors_that_matched_only_through_a_child_are_dropped(messy):
+    conn, root = messy
+    out = query.find(conn, "jpg")
+    paths = [line.split()[1] for line in out.splitlines()]
+    assert any(p.endswith("datasets/faces") for p in paths)
+    assert not any(p.endswith("/datasets") or p.endswith("/lab") for p in paths)
+
+
+def test_a_folder_whose_name_matches_is_kept(messy):
+    conn, root = messy
+    out = query.find(conn, "datasets")
+    assert any(line.split()[1].endswith("/datasets") for line in out.splitlines())
+
+
+def test_many_sibling_files_fold_into_one_line(messy):
+    conn, root = messy
+    out = query.find(conn, "metric")
+    assert len(out.splitlines()) == 1
+    assert "5 matches in" in out and "metric_a.py" in out and "utils" in out
+
+
+def test_few_sibling_files_stay_separate(messy):
+    conn, root = messy
+    assert len(query.find(conn, "train loader").splitlines()) == 1
+    assert len(query.find(conn, "metric_a").splitlines()) == 1
+
+
+def test_overflow_says_how_many_were_hidden(messy):
+    conn, root = messy
+    out = query.find(conn, "py", limit=1)
+    assert out.splitlines()[-1].startswith("... ") and "more" in out

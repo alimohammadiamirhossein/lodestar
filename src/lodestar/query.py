@@ -10,6 +10,8 @@ import time
 from .index import norm
 
 MAX_LIMIT = 50
+CANDIDATE_FACTOR = 4   # fetch extra hits so dropping ancestors and folding siblings still fills the page
+GROUP_MIN = 3          # more sibling files than this fold into one line
 
 
 def human_size(n: int, approx: bool = False) -> str:
@@ -47,11 +49,47 @@ def find(conn: sqlite3.Connection, query: str, kind: str = "", limit: int = 20) 
         sql += " AND n.kind = ?"
         args.append(kind)
     sql += " ORDER BY bm25(nodes_fts, 5.0, 1.0, 1.0, 2.0) LIMIT ?"
-    args.append(limit)
+    args.append(limit * CANDIDATE_FACTOR)
     rows = conn.execute(sql, args).fetchall()
     if not rows:
         return f"No match for {query!r}. Run `lodestar index` if the tree changed."
-    return "\n".join(_line(r) for r in rows)
+    lines = _group(rows, re.findall(r"[a-z0-9]+", query.lower()))
+    if len(lines) > limit:
+        hidden = len(lines) - limit
+        lines = lines[:limit] + [f"... {hidden} more; narrow the query or filter with kind"]
+    return "\n".join(lines)
+
+
+def _name_matches(name: str, tokens: list[str]) -> bool:
+    parts = re.findall(r"[a-z0-9]+", name.lower())
+    return any(p.startswith(t) for t in tokens for p in parts)
+
+
+def _group(rows: list[sqlite3.Row], tokens: list[str]) -> list[str]:
+    """Drop folders that only matched through a child, and fold many sibling files into one line."""
+    paths = [r["path"] for r in rows]
+    kept = []
+    for r in rows:
+        prefix = r["path"].rstrip("/") + "/"
+        is_ancestor = r["is_dir"] and any(p.startswith(prefix) for p in paths)
+        if is_ancestor and not _name_matches(r["name"], tokens):
+            continue
+        kept.append(r)
+
+    siblings: dict[str, list[sqlite3.Row]] = {}
+    for r in kept:
+        if not r["is_dir"]:
+            siblings.setdefault(r["parent"], []).append(r)
+    lines, folded = [], set()
+    for r in kept:
+        group = siblings.get(r["parent"], []) if not r["is_dir"] else []
+        if len(group) <= GROUP_MIN:
+            lines.append(_line(r))
+        elif r["parent"] not in folded:
+            folded.add(r["parent"])
+            names = ", ".join(g["name"] for g in group[:3])
+            lines.append(f"file     {len(group)} matches in {r['parent']}: {names}, ...")
+    return lines
 
 
 def info(conn: sqlite3.Connection, path: str) -> str:

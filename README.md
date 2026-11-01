@@ -78,8 +78,9 @@ The research folder is a Windows laptop folder indexed cold in 27 seconds. Most 
 individual files in mid-sized folders, so the saving there is about 3x in rows. The big gains come
 from huge flat folders, like the demo's image datasets. Token savings for agents are not measured.
 
-Known weakness: a search can return ancestor folders next to the file you want
-(`find jpg` also lists `datasets/`). Grouping hits by parent is next.
+Search results are tidied before an agent sees them: a folder that matched only because something
+inside it did is dropped (`find jpg` lists `datasets/faces`, not also `datasets/` and the root), and
+more than three matching files in one folder fold into a single "N matches in ..." line.
 
 ## Where it fits
 
@@ -126,7 +127,8 @@ experiment markers and file counts per top-level folder.
 - [x] Structure index with collapsing, kinds, incremental refresh
 - [x] `find`, `tree`, `info`, `stats`; CLI, MCP server, plugin and skill
 - [ ] Benchmark against plain Glob and Grep on a large tree
-- [ ] Group search hits by parent; tag sensitive file names
+- [x] Group search hits by parent
+- [ ] Tag sensitive file names
 - [ ] Experiment table filled from configs and logs
 - [ ] Code graph, wrapping an existing tool
 - [ ] Nightly refresh and consolidation
