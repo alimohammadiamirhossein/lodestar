@@ -14,6 +14,8 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .tokens import file_tokens
+
 PRUNE = frozenset({
     ".git", "node_modules", "__pycache__", ".venv", "venv", "site-packages", ".mypy_cache",
     ".pytest_cache", ".ruff_cache", ".cache", ".tox", ".ipynb_checkpoints", ".conda",
@@ -56,6 +58,7 @@ class Sub:
     size: int = 0
     approx: bool = False
     exts: Counter = field(default_factory=Counter)
+    tokens: int = 0
 
     def add_child(self, other: Sub) -> None:
         self.files += other.files
@@ -63,6 +66,7 @@ class Sub:
         self.size += other.size
         self.approx = self.approx or other.approx
         self.exts.update(other.exts)
+        self.tokens += other.tokens
 
 
 def norm(path: str) -> str:
@@ -122,14 +126,14 @@ class Indexer:
             return
         self.conn.executemany(
             "INSERT INTO nodes(path, parent, root, name, kind, is_dir, n_files, n_dirs, size,"
-            " size_approx, exts, samples, mtime, collapsed, note, run)"
-            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+            " size_approx, exts, samples, mtime, collapsed, note, run, tokens)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
             " ON CONFLICT(path) DO UPDATE SET parent=excluded.parent, root=excluded.root,"
             " name=excluded.name, kind=excluded.kind, is_dir=excluded.is_dir,"
             " n_files=excluded.n_files, n_dirs=excluded.n_dirs, size=excluded.size,"
             " size_approx=excluded.size_approx, exts=excluded.exts, samples=excluded.samples,"
             " mtime=excluded.mtime, collapsed=excluded.collapsed, note=excluded.note,"
-            " run=excluded.run", self.rows)
+            " run=excluded.run, tokens=excluded.tokens", self.rows)
         self.rows.clear()
 
     def _emit(self, *row) -> None:
@@ -153,7 +157,7 @@ class Indexer:
         """Keep an unchanged collapsed node and everything below it without rescanning."""
         self.flush()
         row = self.conn.execute(
-            "SELECT n_files, n_dirs, size, size_approx, exts FROM nodes WHERE path=?", (key,)
+            "SELECT n_files, n_dirs, size, size_approx, exts, tokens FROM nodes WHERE path=?", (key,)
         ).fetchone()
         prefix = key.rstrip("/") + "/"
         self.conn.execute(
@@ -161,7 +165,7 @@ class Indexer:
             (self.run, self.root, key, prefix, prefix[:-1] + "0"))
         self.reused += 1
         return Sub(row["n_files"], row["n_dirs"], row["size"], bool(row["size_approx"]),
-                   Counter(json.loads(row["exts"])))
+                   Counter(json.loads(row["exts"])), row["tokens"])
 
     def walk(self, path: str, parent: str, depth: int) -> Sub:
         self._tick()
@@ -178,7 +182,7 @@ class Indexer:
         subdirs: list[tuple[str, str]] = []
         kept: list[os.DirEntry] = []
         samples: list[str] = []
-        sampled_sizes: list[int] = []
+        sampled: list[tuple[int, str]] = []
         n_files = 0
         has_git = has_experiment = False
         try:
@@ -210,7 +214,7 @@ class Indexer:
                             if n_files <= COLLAPSE_FILES:
                                 kept.append(e)
                             if n_files == COLLAPSE_FILES:
-                                sampled_sizes = [_size(x) for x in kept[:SIZE_SAMPLE]]
+                                sampled = [(_size(x), ext_of(x.name)) for x in kept[:SIZE_SAMPLE]]
                     except OSError:
                         continue
         except OSError:
@@ -219,7 +223,9 @@ class Indexer:
         sub.files = n_files
         collapsed_files = n_files >= COLLAPSE_FILES
         if collapsed_files:
-            sub.size = int(sum(sampled_sizes) / max(len(sampled_sizes), 1) * n_files)
+            count = max(len(sampled), 1)
+            sub.size = int(sum(z for z, _ in sampled) / count * n_files)
+            sub.tokens = int(sum(file_tokens(z, e) for z, e in sampled) / count * n_files)
             sub.approx = True
         file_rows = []
         if not collapsed_files:
@@ -229,9 +235,11 @@ class Indexer:
                 except OSError:
                     continue
                 sub.size += st.st_size
+                tokens = file_tokens(st.st_size, ext_of(e.name))
+                sub.tokens += tokens
                 file_rows.append((join(key, e.name), key, self.root, e.name, "file", 0, 1, 0,
                                   st.st_size, 0, json.dumps({ext_of(e.name): 1}), "[]",
-                                  st.st_mtime_ns, 0, "", self.run))
+                                  st.st_mtime_ns, 0, "", self.run, tokens))
         kept.clear()
 
         collapse_dirs = len(subdirs) >= COLLAPSE_DIRS or depth >= MAX_DEPTH
@@ -253,7 +261,7 @@ class Indexer:
         note = " ".join(top + samples) if collapsed else " ".join(top)
         self._emit(key, parent, self.root, key.rsplit("/", 1)[-1] or key, kind, 1, sub.files,
                    sub.dirs, sub.size, int(sub.approx), json.dumps(dict(sub.exts.most_common(30))),
-                   json.dumps(samples), mtime, int(collapsed), note, self.run)
+                   json.dumps(samples), mtime, int(collapsed), note, self.run, sub.tokens)
         return sub
 
     def count(self, path: str) -> Sub:
@@ -264,7 +272,7 @@ class Indexer:
             self._tick()
             current = stack.pop()
             n = 0
-            sizes: list[int] = []
+            sizes: list[tuple[int, str]] = []
             try:
                 with os.scandir(current) as it:
                     for e in it:
@@ -279,14 +287,15 @@ class Indexer:
                                 n += 1
                                 sub.exts[ext_of(e.name)] += 1
                                 if len(sizes) < 5:
-                                    sizes.append(_size(e))
+                                    sizes.append((_size(e), ext_of(e.name)))
                         except OSError:
                             continue
             except OSError:
                 continue
             sub.files += n
             if sizes:
-                sub.size += int(sum(sizes) / len(sizes) * n)
+                sub.size += int(sum(z for z, _ in sizes) / len(sizes) * n)
+                sub.tokens += int(sum(file_tokens(z, e) for z, e in sizes) / len(sizes) * n)
         return sub
 
 

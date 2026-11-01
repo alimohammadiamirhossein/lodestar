@@ -7,11 +7,30 @@ import re
 import sqlite3
 import time
 
+from . import savings
 from .index import norm
+from .tokens import PATH_TOKENS, human as human_tokens
 
 MAX_LIMIT = 50
 CANDIDATE_FACTOR = 4   # fetch extra hits so dropping ancestors and folding siblings still fills the page
 GROUP_MIN = 3          # more sibling files than this fold into one line
+
+
+class Answer(str):
+    """A text answer that also carries the listing tokens it replaced, for the savings ledger."""
+
+    avoided: int = 0
+
+
+def _answer(text: str, avoided: int = 0) -> Answer:
+    answer = Answer(text)
+    answer.avoided = avoided
+    return answer
+
+
+def _avoided(r: sqlite3.Row) -> int:
+    """A collapsed folder shown as one line replaces a listing of all its entries."""
+    return r["n_files"] * PATH_TOKENS if r["is_dir"] and r["collapsed"] else 0
 
 
 def human_size(n: int, approx: bool = False) -> str:
@@ -25,11 +44,12 @@ def human_size(n: int, approx: bool = False) -> str:
 
 
 def _line(r: sqlite3.Row) -> str:
+    tok = f"~{human_tokens(r['tokens'])} tok" if r["tokens"] > 0 else ""
     if not r["is_dir"]:
-        return f"file     {r['path']}  {human_size(r['size'])}"
+        return f"file     {r['path']}  {human_size(r['size'])}" + (f"  {tok}" if tok else "")
     tag = "collapsed" if r["collapsed"] else "dir"
     return (f"{r['kind']:<11}{r['path']}  [{tag}] {r['n_files']:,} files, "
-            f"{human_size(r['size'], bool(r['size_approx']))}")
+            f"{human_size(r['size'], bool(r['size_approx']))}" + (f", {tok}" if tok else ""))
 
 
 def fts_query(text: str) -> str:
@@ -53,11 +73,12 @@ def find(conn: sqlite3.Connection, query: str, kind: str = "", limit: int = 20) 
     rows = conn.execute(sql, args).fetchall()
     if not rows:
         return f"No match for {query!r}. Run `lodestar index` if the tree changed."
-    lines = _group(rows, re.findall(r"[a-z0-9]+", query.lower()))
-    if len(lines) > limit:
-        hidden = len(lines) - limit
-        lines = lines[:limit] + [f"... {hidden} more; narrow the query or filter with kind"]
-    return "\n".join(lines)
+    entries = _group(rows, re.findall(r"[a-z0-9]+", query.lower()))
+    shown = entries[:limit]
+    lines = [line for line, _ in shown]
+    if len(entries) > limit:
+        lines.append(f"... {len(entries) - limit} more; narrow the query or filter with kind")
+    return _answer("\n".join(lines), sum(a for _, a in shown))
 
 
 def _name_matches(name: str, tokens: list[str]) -> bool:
@@ -65,7 +86,7 @@ def _name_matches(name: str, tokens: list[str]) -> bool:
     return any(p.startswith(t) for t in tokens for p in parts)
 
 
-def _group(rows: list[sqlite3.Row], tokens: list[str]) -> list[str]:
+def _group(rows: list[sqlite3.Row], tokens: list[str]) -> list[tuple[str, int]]:
     """Drop folders that only matched through a child, and fold many sibling files into one line."""
     paths = [r["path"] for r in rows]
     kept = []
@@ -84,11 +105,11 @@ def _group(rows: list[sqlite3.Row], tokens: list[str]) -> list[str]:
     for r in kept:
         group = siblings.get(r["parent"], []) if not r["is_dir"] else []
         if len(group) <= GROUP_MIN:
-            lines.append(_line(r))
+            lines.append((_line(r), _avoided(r)))
         elif r["parent"] not in folded:
             folded.add(r["parent"])
             names = ", ".join(g["name"] for g in group[:3])
-            lines.append(f"file     {len(group)} matches in {r['parent']}: {names}, ...")
+            lines.append((f"file     {len(group)} matches in {r['parent']}: {names}, ...", 0))
     return lines
 
 
@@ -98,7 +119,7 @@ def info(conn: sqlite3.Connection, path: str) -> str:
     if r is None:
         return f"{key} is not in the index. Use find to locate it, or index its root first."
     if not r["is_dir"]:
-        return _line(r)
+        return _answer(_line(r))
     exts = json.loads(r["exts"])
     top = ", ".join(f"{e or '(none)'} {n:,}" for e, n in list(exts.items())[:6])
     lines = [
@@ -107,6 +128,8 @@ def info(conn: sqlite3.Connection, path: str) -> str:
         f"{human_size(r['size'], bool(r['size_approx']))}",
         f"extensions: {top or 'none'}",
     ]
+    if r["tokens"] > 0:
+        lines.append(f"reading all the text here would cost about {human_tokens(r['tokens'])} tokens")
     samples = json.loads(r["samples"])
     if samples:
         lines.append("samples: " + ", ".join(samples))
@@ -115,7 +138,7 @@ def info(conn: sqlite3.Connection, path: str) -> str:
     run = conn.execute("SELECT finished FROM runs WHERE id=?", (r["run"],)).fetchone()
     if run and run["finished"]:
         lines.append("indexed: " + time.strftime("%Y-%m-%d %H:%M", time.localtime(run["finished"])))
-    return "\n".join(lines)
+    return _answer("\n".join(lines), _avoided(r))
 
 
 def tree(conn: sqlite3.Connection, path: str, limit: int = 40) -> str:
@@ -132,7 +155,7 @@ def tree(conn: sqlite3.Connection, path: str, limit: int = 40) -> str:
     lines = [_line(r) for r in rows]
     if total > len(rows):
         lines.append(f"... {total - len(rows):,} more")
-    return "\n".join(lines)
+    return _answer("\n".join(lines), sum(_avoided(r) for r in rows))
 
 
 def stats(conn: sqlite3.Connection) -> str:
@@ -156,4 +179,7 @@ def stats(conn: sqlite3.Connection) -> str:
         "SELECT kind, count(*) AS n FROM nodes WHERE is_dir=1 GROUP BY kind ORDER BY n DESC"
     ).fetchall()
     lines.append("directories by kind: " + ", ".join(f"{k['kind']} {k['n']:,}" for k in kinds))
+    saved = savings.summary_line(conn)
+    if saved:
+        lines.append(saved)
     return "\n".join(lines)

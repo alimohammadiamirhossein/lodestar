@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS nodes (
     mtime INTEGER NOT NULL,
     collapsed INTEGER NOT NULL,
     note TEXT NOT NULL,
-    run INTEGER NOT NULL
+    run INTEGER NOT NULL,
+    tokens INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS nodes_parent ON nodes(parent);
 CREATE INDEX IF NOT EXISTS nodes_root_run ON nodes(root, run);
@@ -39,6 +40,15 @@ CREATE TABLE IF NOT EXISTS runs (
     nodes INTEGER NOT NULL DEFAULT 0,
     allow_foreign INTEGER NOT NULL DEFAULT 0,
     full INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS savings (
+    id INTEGER PRIMARY KEY,
+    ts REAL NOT NULL,
+    session TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    delivered INTEGER NOT NULL,
+    avoided INTEGER NOT NULL
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS nodes_fts USING fts5(
@@ -86,6 +96,12 @@ def connect(db_path: str | Path | None = None) -> sqlite3.Connection:
         conn.execute("ALTER TABLE runs ADD COLUMN allow_foreign INTEGER NOT NULL DEFAULT 0")
     if "full" not in columns:
         conn.execute("ALTER TABLE runs ADD COLUMN full INTEGER NOT NULL DEFAULT 0")
+    node_columns = {r["name"] for r in conn.execute("PRAGMA table_info(nodes)")}
+    if "tokens" not in node_columns:
+        conn.execute("ALTER TABLE nodes ADD COLUMN tokens INTEGER NOT NULL DEFAULT 0")
+        # Collapsed folders are reused by mtime, so force them to be scanned again for tokens.
+        conn.execute("UPDATE nodes SET mtime=-1 WHERE collapsed=1")
+        conn.commit()
     return conn
 
 
