@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lodestar-mcp"
+version = "0.1.0"
+description = "MCP server that gives coding agents a cheap map of huge file trees, so they ask first and open only what it names."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Amirhossein Alimohammadi" }]
+keywords = [
+    "claude-code", "claude", "mcp", "mcp-server", "model-context-protocol", "ai-agent",
+    "coding-agent", "file-index", "token-savings", "context-engineering", "sqlite", "fts5",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+]
+dependencies = [
+    "mcp>=1.20,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+lodestar = "lodestar.cli:main"
+lodestar-mcp = "lodestar.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/alimohammadiamirhossein/lodestar"
+Repository = "https://github.com/alimohammadiamirhossein/lodestar"
+Issues = "https://github.com/alimohammadiamirhossein/lodestar/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lodestar"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
