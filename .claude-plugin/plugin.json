@@ -1,0 +1,20 @@
+{
+  "name": "lodestar",
+  "displayName": "Lodestar",
+  "version": "0.1.0",
+  "description": "A cheap map of huge file trees. Agents ask it first and open only the files it names, instead of searching and reading.",
+  "author": {
+    "name": "Amirhossein Alimohammadi",
+    "url": "https://github.com/alimohammadiamirhossein"
+  },
+  "homepage": "https://github.com/alimohammadiamirhossein/lodestar",
+  "repository": "https://github.com/alimohammadiamirhossein/lodestar",
+  "license": "MIT",
+  "keywords": ["mcp", "file-index", "token-savings", "context-engineering", "coding-agent"],
+  "mcpServers": {
+    "lodestar": {
+      "command": "uvx",
+      "args": ["--from", "${CLAUDE_PLUGIN_ROOT}", "lodestar", "serve"]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "lodestar",
+  "description": "Lodestar: a cheap map of huge file trees for coding agents.",
+  "owner": {
+    "name": "Amirhossein Alimohammadi",
+    "url": "https://github.com/alimohammadiamirhossein"
+  },
+  "plugins": [
+    {
+      "name": "lodestar",
+      "source": "./",
+      "description": "Find files, folders, repos and datasets from an index instead of searching and reading. Big folders are collapsed into one entry."
+    }
+  ]
+}
