@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only survey of a shared server for the atlas design (DESIGN.md §10).
+# Read-only survey of a shared server for the atlas design (docs/design.md).
 # Lists metadata only: never reads file contents, never leaves the given roots.
 # Usage: bash survey.sh [ROOT ...]        (default: $HOME)
 # Output: survey-<host>-<date>.txt in the current directory.
