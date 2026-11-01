@@ -5,5 +5,8 @@
 - Structure index with directory collapsing, kind detection, incremental refresh by mtime and a
   time budget.
 - `find`, `info`, `tree` and `stats` over SQLite FTS5.
+- `dream` and `brief`: nightly refresh and a brief of what changed, also as the `whats_new` tool
+  and `/lodestar:brief`.
+- `forget`; nested roots are refused.
 - Search drops ancestor folders that matched only through a child and folds sibling files.
 - CLI, MCP server over stdio, Claude Code plugin and a skill.

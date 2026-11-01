@@ -16,10 +16,10 @@ first and open only the files it names, instead of grepping and listing folders.
 
 It never reads file contents and never calls a model.
 
-> Status: alpha. The structure index and the queries work and CI is green on Linux, macOS and
-> Windows. **Not measured yet:** how many tokens it saves an agent against plain Glob and Grep.
-> The code graph, experiment table and nightly consolidation in [docs/design.md](docs/design.md)
-> are not built.
+> Status: alpha. The structure index, the queries and the nightly dream work, and CI is green on
+> Linux, macOS and Windows. **Not measured yet:** how many tokens it saves an agent against plain
+> Glob and Grep. The code graph and experiment table in [docs/design.md](docs/design.md) are not
+> built.
 
 ## What an agent sees
 
@@ -63,7 +63,7 @@ collapsed: individual entries are not indexed; list the folder to see more
 - **Known limit.** A collapsed folder is reused when its own mtime is unchanged, and a folder's
   mtime does not change when files are added deeper down. Counts under a folder collapsed for
   having many subfolders can therefore go stale until `lodestar index --full` runs; schedule it
-  weekly.
+  weekly; `lodestar dream` does this on its own once a week.
 - **Bounded answers.** Every query returns a capped list of short lines.
 - **Shared machines.** You name the roots. A root owned by another user is refused unless you
   pass `--allow-foreign`, and that choice is remembered for refreshes. Symlinks are not followed,
@@ -87,7 +87,8 @@ more than three matching files in one folder fold into a single "N matches in ..
 <img src="docs/img/system.svg" alt="A Sonnet main agent consults an Opus advisor, hands cheap work to DeepSeek, and asks the Lodestar map first. The structure index is built; the other layers are planned." width="900">
 
 Lodestar is one layer of a larger plan for cheaper, smarter agents on a shared lab server. It has
-no dependency on any other part and works alone. See [docs/design.md](docs/design.md).
+no dependency on any other part and works alone. See [docs/design.md](docs/design.md) for the
+roadmap and [docs/lab-plan.md](docs/lab-plan.md) for the context it came from.
 
 ## Install
 
@@ -104,9 +105,21 @@ claude plugin marketplace add alimohammadiamirhossein/lodestar
 claude plugin install lodestar@lodestar
 ```
 
+The plugin starts the server with `uvx`, so it needs [uv](https://docs.astral.sh/uv/) installed.
 Or add the server by hand: `claude mcp add lodestar -- lodestar serve`.
 
 The index lives in `~/.lodestar/index.db` (override with `LODESTAR_HOME`).
+
+## Dreaming
+
+`lodestar dream` refreshes every indexed root and writes a short brief of what changed: new and
+removed repos, experiments, datasets and checkpoint folders, folders that grew or shrank a lot, and
+roots that had problems. It reads no file contents and calls no model. Agents read the brief with
+`whats_new` or `/lodestar:brief`; you read it with `lodestar brief`. Run it nightly:
+
+```bash
+0 3 * * * ionice -c3 lodestar dream --max-seconds 1800 >> ~/.lodestar/dream.log 2>&1
+```
 
 ## Commands and tools
 
@@ -117,6 +130,9 @@ The index lives in `~/.lodestar/index.db` (override with `LODESTAR_HOME`).
 | `lodestar tree PATH` | `tree` | Indexed children of a folder, biggest first |
 | `lodestar info PATH` | `info` | Kind, counts, size, extensions, sample names |
 | `lodestar stats` | `stats` | What is indexed and when |
+| `lodestar dream` | | Refresh all roots, write the brief |
+| `lodestar brief` | `whats_new` | Show what changed at the last dream |
+| `lodestar forget ROOT` | | Remove a root and its rows |
 | `lodestar serve` | | Run the MCP server on stdio |
 
 [scripts/survey.sh](scripts/survey.sh) is a read-only survey of a server: disk, tools, repos,
@@ -131,7 +147,8 @@ experiment markers and file counts per top-level folder.
 - [ ] Tag sensitive file names
 - [ ] Experiment table filled from configs and logs
 - [ ] Code graph, wrapping an existing tool
-- [ ] Nightly refresh and consolidation
+- [x] Nightly refresh and a brief of what changed (`lodestar dream`)
+- [ ] Consolidation: lessons from sessions and refining instruction files
 
 ## Develop
 

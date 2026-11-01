@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" role="img" aria-labelledby="t d">
   <title id="t">Where Lodestar fits</title>
-  <desc id="d">A Sonnet main agent consults an Opus advisor, hands cheap work to DeepSeek, and asks the Lodestar map first. The structure index is built; the code graph, experiment table, summary pages and nightly dream are planned.</desc>
+  <desc id="d">A Sonnet main agent consults an Opus advisor, hands cheap work to DeepSeek, and asks the Lodestar map first. The structure index and the nightly refresh are built; the code graph, experiment table and summary pages are planned.</desc>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
       <path d="M0 0 L10 5 L0 10 z" fill="#8aa0c4"/>
@@ -56,7 +56,7 @@
 
     <rect x="32" y="486" width="896" height="52" rx="12" fill="none" stroke="#6f84a8" stroke-dasharray="5 4"/>
     <text x="52" y="518" font-size="15" font-weight="600" fill="#c9d6ee">Nightly dream</text>
-    <text x="170" y="518" font-size="13" fill="#9fb0cc">planned: refresh the map, mine lessons, tidy and refine your .md files with undo</text>
+    <text x="170" y="518" font-size="13" fill="#9fb0cc">refresh and brief built; lessons and refining your .md files with undo planned</text>
   </g>
   <g stroke="#8aa0c4" stroke-width="2" fill="none" marker-end="url(#a)">
     <line x1="142" y1="154" x2="142" y2="190"/>

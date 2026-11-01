@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "lodestar-mcp"
-version = "0.1.0"
+dynamic = ["version"]
 description = "MCP server that gives coding agents a cheap map of huge file trees, so they ask first and open only what it names."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -43,6 +43,9 @@ lodestar-mcp = "lodestar.cli:main"
 Homepage = "https://github.com/alimohammadiamirhossein/lodestar"
 Repository = "https://github.com/alimohammadiamirhossein/lodestar"
 Issues = "https://github.com/alimohammadiamirhossein/lodestar/issues"
+
+[tool.hatch.version]
+path = "src/lodestar/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lodestar"]
